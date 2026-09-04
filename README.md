@@ -345,7 +345,3 @@ still produces usable data.
 - Custom item catalog upload (CSV) and customer pools
 - Non-US address formats
 - Optional CLI (`npm run generate -- --count 50 --out orders.xml`)
-
-## License
-
-MIT
