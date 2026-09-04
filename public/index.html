@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sterling Sample Data Generator</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="app-header__titles">
+        <h1>Sterling Sample Data Generator</h1>
+        <p id="generator-description">Loading generators&hellip;</p>
+      </div>
+      <div class="app-header__actions">
+        <label class="field-inline">
+          <span>API</span>
+          <select id="generator-select"></select>
+        </label>
+        <button type="button" id="reset-button" class="btn btn--ghost">Reset defaults</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel panel--form" aria-label="Generator options">
+        <form id="options-form" autocomplete="off">
+          <div id="form-groups" class="form-groups"></div>
+          <div class="form-footer">
+            <button type="submit" class="btn btn--primary">Generate</button>
+            <span id="status" class="status" role="status" aria-live="polite"></span>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel panel--preview" aria-label="Payload preview">
+        <div class="preview-toolbar">
+          <div class="segmented" role="tablist" aria-label="Output format">
+            <button type="button" class="segmented__item is-active" data-format="xml" role="tab">XML</button>
+            <button type="button" class="segmented__item" data-format="json" role="tab">JSON</button>
+          </div>
+
+          <div class="order-nav" id="order-nav" hidden>
+            <button type="button" class="btn btn--icon" id="prev-order" aria-label="Previous order">&larr;</button>
+            <span id="order-position" class="order-nav__label"></span>
+            <button type="button" class="btn btn--icon" id="next-order" aria-label="Next order">&rarr;</button>
+            <select id="order-select" class="order-nav__select" aria-label="Select order"></select>
+          </div>
+
+          <div class="preview-toolbar__right">
+            <button type="button" class="btn btn--ghost" id="copy-button">Copy</button>
+            <button type="button" class="btn btn--ghost" id="download-one">Download this order</button>
+            <button type="button" class="btn btn--primary" id="download-all">Download all</button>
+          </div>
+        </div>
+
+        <pre class="code" id="preview"><code>Generating sample data&hellip;</code></pre>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <span>
+        Payloads are generated locally and never sent to an OMS instance. Card numbers are synthetic
+        (Faker) and email addresses use the reserved <code>example.com</code> domain.
+      </span>
+    </footer>
+
+    <div id="toast" class="toast" hidden></div>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

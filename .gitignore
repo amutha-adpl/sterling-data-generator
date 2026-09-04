@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+dist/
+
+# Local output / generated sample data
+output/
+*.local.xml
+*.local.json
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.*
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
