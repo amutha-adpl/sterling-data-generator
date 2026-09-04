@@ -32,6 +32,107 @@ Requires Node.js 20+. The server binds to `0.0.0.0`; override with `PORT` / `HOS
 
 ---
 
+## Testing
+
+Four levels, cheapest first. You rarely need level 4 until you point the payload at a real
+Sterling instance.
+
+### 1. Automated checks (run these on every change)
+
+```bash
+npm test           # 19 Vitest tests
+npm run typecheck  # strict TypeScript, no emit
+```
+
+| Suite                      | What it locks down                                                                                     |
+| -------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `tests/createOrder.test.ts`| Option defaults and range normalisation; XML well-formedness; **determinism** (same seed = identical output, different seed = different data); sequential order numbers; line counts; optional blocks on/off; **totals arithmetic** (line, header and grand totals all reconcile); JSON structure |
+| `tests/xml.test.ts`         | Renderer behaviour: self-closing tags, escaping of all five XML entities, repeated siblings, `@`-prefixed attributes in JSON, single object vs array for bundles |
+
+If you add a generator or change the money logic, add a test next to it — the totals test is the
+one that catches real regressions.
+
+### 2. Manual check in the UI
+
+```bash
+npm start          # http://localhost:3000
+```
+
+Quick sanity pass:
+
+- Set **Random seed** to `1`, note the output, set it to `2` → data changes. Set it back to `1` →
+  output is identical again (this is the reproducibility guarantee).
+- Toggle **XML / JSON** → both show the same data with the same totals.
+- Untick **Include taxes** → `<LineTaxes>`/`<HeaderTaxes>` disappear and `GrandTotal` drops by the
+  tax amount.
+- Set **Shipping charge** to `0` → `<HeaderCharges>` disappears.
+- **Download this order**, open the file in an editor, confirm `GrandTotal = SubTotal + GrandTax`.
+- Set **Orders to generate** to `500` → still fast (generation is a few ms).
+
+### 3. Test the API without the UI
+
+```bash
+curl -s localhost:3000/api/health
+curl -s localhost:3000/api/generators
+
+curl -s -X POST localhost:3000/api/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"generatorId":"createOrder","options":{"count":1,"seed":42}}'
+
+# Validation path - must return 400 with the failing field
+curl -s -o /dev/null -w '%{http_code}\n' -X POST localhost:3000/api/generate \
+  -H 'Content-Type: application/json' \
+  -d '{"generatorId":"createOrder","options":{"orderDate":"09/04/2026"}}'
+```
+
+Pipe a payload through any XML parser to prove it is well formed:
+
+```bash
+curl -s -X POST localhost:3000/api/generate -H 'Content-Type: application/json' \
+  -d '{"generatorId":"createOrder","options":{"count":1}}' \
+  | python3 -c "import json,sys; print(json.load(sys.stdin)['documents'][0]['xml'])" \
+  | python3 -c "import sys,xml.dom.minidom; xml.dom.minidom.parseString(sys.stdin.read()); print('XML OK')"
+```
+
+### 4. Test against your own Sterling instance
+
+The tool never posts to OMS, so this step is yours — and it is the only one that proves the
+payload is *valid for your configuration*.
+
+1. **Sterling API Tester** — usually `http://<host>:<port>/smcfs/console/apitester.jsp`, or
+   Tools → API Tester in the console. Paste the downloaded XML as the input for `createOrder` and
+   run it.
+2. **REST invoke** (if `xapirest` is enabled):
+
+   ```bash
+   # 1. login
+   curl -X POST 'http://<host>:<port>/smcfs/restapi/invoke/login' \
+     -H 'Content-Type: application/json' -d '{"LoginID":"admin","Password":"<pwd>"}'
+
+   # 2. call the API with the token from step 1
+   curl -X POST 'http://<host>:<port>/smcfs/restapi/invoke/createOrder?_token=<token>' \
+     -H 'Content-Type: application/xml' --data-binary @ORD0000001.xml
+   ```
+
+   Use a **dev or sandbox instance only**.
+
+**Expect these first failures on a fresh implementation** — they are configuration, not code:
+
+| Symptom                        | Cause / fix                                                                     |
+| ------------------------------ | ------------------------------------------------------------------------------- |
+| Item not found                 | `ItemID` is not in your item master — replace `catalog.ts` with your real items   |
+| Invalid / unknown ship node    | `ShipNode` is not configured for your enterprise — set your real nodes in the form|
+| Invalid document type          | `DocumentType` not configured — check your document-type setup                    |
+| Pricing or tax errors          | Price list / tax setup missing for the enterprise or item                          |
+| Mandatory attribute missing    | Your implementation requires extra attributes — extend `build.ts` and add a test   |
+
+Once one order posts successfully, bump **Orders to generate** and load-test your pipeline.
+
+To create, schedule and release in a single call, wrap the generated `<Order>` in a `multiApi`
+document (`<MultiApi><API Name="createOrder">…` then `scheduleOrder`, `releaseOrder`).
+
+---
+
 ## Using the UI
 
 1. Pick the API (today: `createOrder`).
