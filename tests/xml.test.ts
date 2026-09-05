@@ -46,7 +46,7 @@ describe('renderXml', () => {
 });
 
 describe('renderJson', () => {
-  it('prefixes attributes with @ and groups repeated siblings into arrays', () => {
+  it('prefixes attributes with groups repeated siblings into arrays', () => {
     const node: XmlNode = {
       name: 'Order',
       attrs: { OrderNo: 'ORD1', HoldFlag: undefined },
@@ -56,17 +56,17 @@ describe('renderJson', () => {
       ],
     };
     expect(toJson(node)).toEqual({
-      '@OrderNo': 'ORD1',
-      OrderLine: [{ '@PrimeLineNo': '1' }, { '@PrimeLineNo': '2' }],
+      'OrderNo': 'ORD1',
+      OrderLine: [{ 'PrimeLineNo': '1' }, { 'PrimeLineNo': '2' }],
     });
   });
 
   it('renders one document as an object and many as an array', () => {
     const node: XmlNode = { name: 'Order', attrs: { OrderNo: 'ORD1' } };
-    expect(JSON.parse(renderJsonDocuments([node]))).toEqual({ Order: { '@OrderNo': 'ORD1' } });
+    expect(JSON.parse(renderJsonDocuments([node]))).toEqual({ Order: { 'OrderNo': 'ORD1' } });
     expect(JSON.parse(renderJsonDocuments([node, node]))).toEqual([
-      { Order: { '@OrderNo': 'ORD1' } },
-      { Order: { '@OrderNo': 'ORD1' } },
+      { Order: { 'OrderNo': 'ORD1' } },
+      { Order: { 'OrderNo': 'ORD1' } },
     ]);
   });
 });

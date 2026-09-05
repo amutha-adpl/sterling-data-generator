@@ -2,14 +2,13 @@
  * JSON renderer for the same `XmlNode` tree used by the XML renderer.
  *
  * Convention (Badgerfish-style, kept deliberately simple):
- *   - attributes are prefixed with `@`
  *   - child elements become object keys
  *   - repeated siblings collapse into an array
  *   - an element with no attributes and no children renders as an empty object
  *
  * Example:
  *   <Order OrderNo="ORD0000001"><PriceInfo Currency="USD" /></Order>
- *   -> { "Order": { "@OrderNo": "ORD0000001", "PriceInfo": { "@Currency": "USD" } } }
+ *   -> { "Order": { "OrderNo": "ORD0000001", "PriceInfo": { "Currency": "USD" } } }
  */
 
 import type { XmlNode } from './xml.js';
@@ -25,7 +24,7 @@ export function toJson(node: XmlNode): JsonObject {
 
   for (const [name, value] of Object.entries(node.attrs ?? {})) {
     if (value === undefined) continue;
-    out[`@${name}`] = value;
+    out[`${name}`] = value;
   }
 
   const groups = new Map<string, XmlNode[]>();

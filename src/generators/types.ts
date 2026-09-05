@@ -46,7 +46,20 @@ export interface BooleanField extends BaseField {
   kind: 'boolean';
 }
 
-export type FieldSpec = NumberField | TextField | SelectField | BooleanField;
+/**
+ * Free text with suggested values.
+ *
+ * Sterling codes such as EntryType or PaymentStatus differ between instances,
+ * so these are suggestions rather than a closed list - type your own and it
+ * is passed through unchanged.
+ */
+export interface ComboField extends BaseField {
+  kind: 'combo';
+  options: ReadonlyArray<{ value: string; label: string }>;
+  placeholder?: string;
+}
+
+export type FieldSpec = NumberField | TextField | SelectField | ComboField | BooleanField;
 
 /** One generated payload (for createOrder: one `<Order>` document). */
 export interface GeneratedDocument {

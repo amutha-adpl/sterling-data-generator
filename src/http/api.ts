@@ -59,6 +59,7 @@ apiRouter.post('/generate', (req, res) => {
   const startedAt = Date.now();
   const resolvedOptions = parsed.data;
   const documents = generator.generate(resolvedOptions);
+  const [only] = documents;
   const generatedAt = new Date().toISOString();
   const supports = (format: OutputFormat) => generator.formats.includes(format);
 
@@ -72,16 +73,20 @@ apiRouter.post('/generate', (req, res) => {
       xml: supports('xml') ? renderXml(document.tree) : null,
       json: supports('json') ? renderJson(document.tree) : null,
     })),
-    // Ready-to-save bundle for "download all". A single order is emitted as-is;
-    // multiple orders are wrapped in <Orders> (XML) / an array (JSON).
+    // Ready-to-save bundle for "download all". A single document is emitted
+    // as-is: a query such as getOrderList is one self-contained payload, and
+    // wrapping it in <Orders> would stop it being sendable. Only a genuine
+    // batch (createOrder with count > 1) is wrapped.
     bundle: {
-      xml: supports('xml')
-        ? renderXml({
-            name: 'Orders',
-            attrs: { ApiName: generator.apiName, Count: documents.length, GeneratedAt: generatedAt },
-            children: documents.map((document) => document.tree),
-          })
-        : null,
+      xml: !supports('xml')
+        ? null
+        : documents.length === 1 && only
+          ? renderXml(only.tree)
+          : renderXml({
+              name: 'Orders',
+              attrs: { ApiName: generator.apiName, Count: documents.length, GeneratedAt: generatedAt },
+              children: documents.map((document) => document.tree),
+            }),
       json: supports('json') ? renderJsonDocuments(documents.map(toTree)) : null,
     },
     meta: {

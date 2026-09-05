@@ -1,15 +1,19 @@
 {
   "name": "sterling-data-generator",
   "version": "0.1.0",
-  "description": "Sample data generator for IBM Sterling Order Management APIs (createOrder first). Generates XML/JSON payloads for preview and download - it never connects to an OMS instance.",
+  "description": "Sample data generator for IBM Sterling Order Management APIs. Builds createOrder payloads (sales, return, purchase, transfer) for preview and download.",
   "type": "module",
   "license": "MIT",
   "private": true,
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "concurrently -k -n api,web -c blue,green \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "PORT=3001 tsx watch src/index.ts",
+    "dev:web": "vite",
+    "build": "npm run build:api && npm run build:web",
+    "build:api": "tsc --project tsconfig.build.json",
+    "build:web": "vite build",
     "start": "tsx src/index.ts",
-    "build": "tsc --project tsconfig.build.json",
-    "serve": "node dist/index.js",
+    "serve": "node dist/server/index.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
@@ -17,16 +21,29 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@faker-js/faker": "9.4.0",
-    "express": "4.21.2",
+    "@faker-js/faker": "10.6.0",
+    "express": "4.22.2",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "zod": "3.24.1"
   },
   "devDependencies": {
-    "@types/express": "4.17.21",
+    "@types/express": "4.17.25",
     "@types/node": "22.13.1",
-    "fast-xml-parser": "4.5.1",
-    "tsx": "4.19.2",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "concurrently": "10.0.5",
+    "fast-xml-parser": "5.11.1",
+    "tsx": "4.23.13",
     "typescript": "5.7.3",
-    "vitest": "2.1.8"
+    "vite": "8.2.2",
+    "vitest": "5.0.0"
+  },
+  "overrides": {
+    "qs": "^6.16.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
   }
 }
